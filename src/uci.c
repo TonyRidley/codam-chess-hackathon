@@ -51,6 +51,32 @@ static char *get_token(char *string, char *store)
 	return NULL;
 }
 
+void print_pos(struct position *pos) {
+	for (int y = 0; y < 8; y++) {
+		for (int x = 0; x < 8; x++) {
+			int p = pos->board[y * 8 + x];
+			if (p == NO_PIECE) {
+				printf(". ");
+				continue;
+			}
+			char c;
+			switch (TYPE(p)) {
+				case PAWN: c = 'p'; break;
+				case KNIGHT: c = 'n'; break;
+				case BISHOP: c = 'b'; break;
+				case ROOK: c = 'r'; break;
+				case QUEEN: c = 'q'; break;
+				case KING: c = 'k'; break;
+			}
+			if (COLOR(p) == WHITE) {
+				c = toupper(c);
+			}
+			printf("%c ", c);
+		}
+		printf("\n");
+	}
+}
+
 static void uci_position(struct position *pos, char *token, char *store)
 {
 	token = get_token(token, store);

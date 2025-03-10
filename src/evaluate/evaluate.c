@@ -17,38 +17,38 @@ int evaluate(const struct position *pos) {
 			if (type == PAWN)
 			{
 				if (color == WHITE)
-					score[color] += pawn_position[square];
-				else
 					score[color] += pawn_position[63 - square];
+				else
+					score[color] += pawn_position[square];
 			}
 			else if(type == BISHOP)
 			{
 				if (color == WHITE)
-					score[color] += bishop_position[square];
-				else
 					score[color] += bishop_position[63 - square];
+				else
+					score[color] += bishop_position[square];
 			}
 			else if(type == KNIGHT)
 			{
 				if (color == WHITE)
-					score[color] += knight_position[square];
-				else
 					score[color] += knight_position[63 - square];
+				else
+					score[color] += knight_position[square];
 			}
 			else if (type == ROOK)
 			{
 				if (color == WHITE)
-					score[color] += rook_position[square];
-				else
 					score[color] += rook_position[63 - square];
+				else
+					score[color] += rook_position[square];
 			
 			}
 			else if (type == QUEEN)
 			{
 				if (color == WHITE)
-					score[color] += queen_position[square];
-				else
 					score[color] += queen_position[63 - square];
+				else
+					score[color] += queen_position[square];
 			}
 		}
 	}
