@@ -1,10 +1,15 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <stdint.h>
+
+typedef uint64_t Bitboard;
+
 #define SUCCESS 0
 #define FAILURE -1
 
 #define NO_COLOR -1
+#define NO_PROMOTION -1
 #define NO_TYPE -1
 #define NO_PIECE -1
 #define NO_FILE -1

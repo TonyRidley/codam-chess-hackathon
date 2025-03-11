@@ -8,7 +8,7 @@ CFLAGS = -Wall -Wextra -pedantic -Iincludes
 
 # Source files
 SRC =	src/evaluate/evaluate.c src/evaluate/game_phase.c src/evaluate/piece_square_value.c \
-		src/search/search.c \
+		src/search/search.c src/bitboards.c \
 		src/generate.c src/main.c src/move.c src/parse.c \
 		src/perft.c src/position.c src/uci.c
 
@@ -20,7 +20,7 @@ OBJS = $(SRC:%.c=$(OBJ_DIR)/%.o)
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(COMPILER)	$(CFLAGS)	$(OBJS)	-o	$(NAME) -lm
+	$(COMPILER) $(CFLAGS) $(OBJS) -o $(NAME)
 
 $(OBJ_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
