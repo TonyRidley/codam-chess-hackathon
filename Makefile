@@ -8,7 +8,7 @@ CFLAGS = -Wall -Wextra -pedantic -Iincludes
 
 # Source files
 SRC =	src/evaluate/evaluate.c src/evaluate/game_phase.c src/evaluate/piece_square_value.c \
-		src/search/search.c src/bitboards.c \
+		src/search/search.c src/bitboards.c src/evaluate/pawn_structure.c \
 		src/generate.c src/main.c src/move.c src/parse.c \
 		src/perft.c src/position.c src/uci.c
 
