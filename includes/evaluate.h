@@ -41,7 +41,7 @@
 /* https://www.chessprogramming.org/Mobility
  * */
 int evaluate(const struct position *pos);
-int get_game_phase(const struct position *pos);
+float get_game_phase(const struct position *pos);
 int get_piece_square_value(int piece, int square, float phase_pct);
 
 // Material Value

@@ -21,7 +21,7 @@ int evaluate(const struct position *pos)
 			score[color] += piece_value[type];
 
 			// Piece square table value
-			score[color] += get_piece_square_value(piece, square, get_game_phase(pos) / 24.0f);
+			score[color] += get_piece_square_value(piece, square, get_game_phase(pos));
 		}
 	}
 
