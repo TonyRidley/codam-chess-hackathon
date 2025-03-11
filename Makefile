@@ -3,11 +3,11 @@ NAME = the_gambit
 
 # Flags
 COMPILER = cc
-CFLAGS = -Wall -Wextra -pedantic -std=c89 -Iincludes
+CFLAGS = -Wall -Wextra -pedantic -Iincludes
 # CFLAGS := -Wall -Wextra -pedantic -std=c89 -O3 -flto -march=native
 
 # Source files
-SRC =	src/evaluate/evaluate.c \
+SRC =	src/evaluate/evaluate.c src/evaluate/game_phase.c src/evaluate/piece_square_value.c \
 		src/search/search.c \
 		src/generate.c src/main.c src/move.c src/parse.c \
 		src/perft.c src/position.c src/uci.c
