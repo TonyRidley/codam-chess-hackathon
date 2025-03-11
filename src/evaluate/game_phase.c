@@ -3,17 +3,25 @@
 
 int get_game_phase(const struct position *pos)
 {
-	int phase = 24;
+	// Total phase score at start = 256
+	const int TOTAL_PHASE = 256;
 
-	// Count knights and bishops (1 point each)
-	phase -= __builtin_popcountll(pos->bitboards[WHITE][KNIGHT] | pos->bitboards[BLACK][KNIGHT]);
-	phase -= __builtin_popcountll(pos->bitboards[WHITE][BISHOP] | pos->bitboards[BLACK][BISHOP]);
+	// Piece phase values
+	const int KNIGHT_PHASE = 16;
+	const int BISHOP_PHASE = 16;
+	const int ROOK_PHASE = 32;
+	const int QUEEN_PHASE = 64;
 
-	// Count rooks (2 points each)
-	phase -= 2 * __builtin_popcountll(pos->bitboards[WHITE][ROOK] | pos->bitboards[BLACK][ROOK]);
+	int phase = TOTAL_PHASE;
 
-	// Count queens (4 points each)
-	phase -= 4 * __builtin_popcountll(pos->bitboards[WHITE][QUEEN] | pos->bitboards[BLACK][QUEEN]);
+	// Subtract phase value for each missing piece
+	phase -= KNIGHT_PHASE * __builtin_popcountll(pos->bitboards[WHITE][KNIGHT] | pos->bitboards[BLACK][KNIGHT]);
+	phase -= BISHOP_PHASE * __builtin_popcountll(pos->bitboards[WHITE][BISHOP] | pos->bitboards[BLACK][BISHOP]);
+	phase -= ROOK_PHASE * __builtin_popcountll(pos->bitboards[WHITE][ROOK] | pos->bitboards[BLACK][ROOK]);
+	phase -= QUEEN_PHASE * __builtin_popcountll(pos->bitboards[WHITE][QUEEN] | pos->bitboards[BLACK][QUEEN]);
+
+	// Convert to 0-24 range for compatibility with existing code
+	phase = (phase * 24) / TOTAL_PHASE;
 
 	return phase;
 }
