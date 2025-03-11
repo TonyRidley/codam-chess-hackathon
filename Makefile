@@ -20,7 +20,7 @@ OBJS = $(SRC:%.c=$(OBJ_DIR)/%.o)
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(COMPILER) $(CFLAGS) $(OBJS) -o $(NAME)
+	$(COMPILER)	$(CFLAGS)	$(OBJS)	-o	$(NAME) -lm
 
 $(OBJ_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)

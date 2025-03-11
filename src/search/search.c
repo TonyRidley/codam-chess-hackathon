@@ -4,7 +4,7 @@
 
 #include <limits.h>
 
-struct search_result minimax(const struct position *pos, int depth)
+struct search_result minimax(const struct position *pos, int depth, int alpha, int beta)
 {
 	struct search_result result;
 
@@ -31,7 +31,7 @@ struct search_result minimax(const struct position *pos, int depth)
 
 			/* minimax is called recursively. this call returns the score of */
 			/* the opponent, so we must negate it to get our score.          */
-			score = -minimax(&copy, depth - 1).score;
+			score = -minimax(&copy, depth - 1, alpha, beta).score;
 
 			/* update the best move if we found a better one.                */
 			if (score > result.score)
@@ -39,6 +39,10 @@ struct search_result minimax(const struct position *pos, int depth)
 				result.move = moves[index];
 				result.score = score;
 			}
+			if (score > alpha)
+				alpha = score;
+			if (alpha >= beta)
+				break ;
 		}
 	}
 
@@ -47,5 +51,5 @@ struct search_result minimax(const struct position *pos, int depth)
 
 struct move search(const struct search_info *info)
 {
-	return minimax(info->pos, 4).move;
+	return minimax(info->pos, 4, INT_MIN, INT_MAX).move;
 }

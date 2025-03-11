@@ -107,7 +107,7 @@ struct search_result {
 /* https://www.chessprogramming.org/Move_Ordering                            */
 /* https://www.chessprogramming.org/Transposition_Table                      */
 /* https://www.chessprogramming.org/Quiescence_Search                        */
-struct search_result minimax(const struct position *pos, int depth);
+struct search_result minimax(const struct position *pos, int depth, int alpha, int beta);
 
 /* the search function sets up the search parameters and calls `minimax` to  */
 /* starts searching. our basic implementation always starts a search at a    */
