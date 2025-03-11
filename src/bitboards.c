@@ -4,9 +4,25 @@
 #include "bitboards.h"
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 static bool is_en_passant(const struct position *pos, struct move move);
 static bool is_castling(const struct position *pos, struct move move);
+
+void init_bitboards(struct position *pos)
+{
+	memset(pos->bitboards, 0, sizeof(pos->bitboards));
+
+	for (int square = 0; square < 64; square++)
+	{
+		int piece = pos->board[square];
+		if (piece != NO_PIECE)
+		{
+			SET_BIT(pos->bitboards[COLOR(piece)][TYPE(piece)], square);
+		}
+	}
+	printf("Bitboards initialized\n");
+}
 
 void update_bitboards_with_move(struct move move, struct position *pos)
 {

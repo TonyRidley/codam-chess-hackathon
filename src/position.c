@@ -1,4 +1,7 @@
 #include "position.h"
+
+#include <bitboards.h>
+
 #include "parse.h"
 #include "types.h"
 
@@ -175,6 +178,5 @@ int parse_position(struct position *pos, const char *fen)
 	/* make sure we reached the end of the string.                           */
 	if (*fen)
 		return FAILURE;
-
-	return SUCCESS;
+	return (SUCCESS);
 }

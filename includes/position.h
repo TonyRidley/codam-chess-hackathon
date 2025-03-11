@@ -2,6 +2,7 @@
 #define POSITION_H
 
 #include <stdio.h>
+#include "types.h"
 
 /* this struct represents the placement of pieces on a chess board, as well  */
 /* as any additional information such as side to move, castling rights, and  */
@@ -37,6 +38,9 @@ struct position {
 
 	/* en passant square, may be `NO_SQUARE`.                                */
 	int en_passant_square;
+
+	/* One bitboard for each piece											 */
+	Bitboard bitboards[2][6];
 };
 
 /* print out information about the position. useful for debugging.           */

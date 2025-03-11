@@ -1,4 +1,7 @@
 #include "perft.h"
+
+#include <bitboards.h>
+
 #include "generate.h"
 #include "position.h"
 #include "types.h"
@@ -71,7 +74,7 @@ void perft_run(void)
 
 			continue;
 		}
-
+		init_bitboards(&pos);
 		nodes = perft(&pos, data.depth);
 
 		if (nodes != data.nodes)
