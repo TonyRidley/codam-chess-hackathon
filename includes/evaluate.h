@@ -40,11 +40,15 @@
 /* https://www.chessprogramming.org/Piece-Square_Tables                      */
 /* https://www.chessprogramming.org/Mobility
  * */
+
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+
 int evaluate(const struct position *pos);
 float get_game_phase(const struct position *pos);
 int evaluate_pawn_structure(const struct position *pos);
 int evaluate_rook(const struct position *pos);
 int get_piece_square_value(int piece, int square, float phase_pct);
+int evaluate_king_corner_endgame(const struct position *pos, float game_phase);
 
 // Material Value
 extern const int piece_value[6];

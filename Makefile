@@ -10,7 +10,7 @@ CFLAGS = -Wall -Wextra -pedantic -Iincludes
 SRC =	src/evaluate/evaluate.c src/evaluate/game_phase.c src/evaluate/piece_square_value.c \
 		src/search/search.c src/bitboards.c src/evaluate/pawn_structure.c \
 		src/generate.c src/main.c src/move.c src/parse.c src/evaluate/rook.c \
-		src/perft.c src/position.c src/uci.c
+		src/perft.c src/position.c src/uci.c src/evaluate/endgame.c
 
 # Objects
 OBJ_DIR = obj
