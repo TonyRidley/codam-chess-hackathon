@@ -20,9 +20,9 @@ int evaluate_pawn_structure(const struct position *pos)
 		int black_count = __builtin_popcountll(black_pawns & file_mask);
 
 		if (white_count > 1)
-			score -= DOUBLE_PAWN_SCORE * (white_count - 1);
+			score -= DOUBLE_PAWN_BONUS * (white_count - 1);
 		if (black_count > 1)
-			score += DOUBLE_PAWN_SCORE * (black_count - 1);
+			score += DOUBLE_PAWN_BONUS * (black_count - 1);
 
 		// Isolated pawns
 		Bitboard adjacent = 0;
@@ -30,9 +30,52 @@ int evaluate_pawn_structure(const struct position *pos)
 		if (file < 7) adjacent |= column << (file + 1);
 
 		if ((white_pawns & file_mask) && !(white_pawns & adjacent))
-			score -= ISOLATED_PAWN_SCORE;
+			score -= ISOLATED_PAWN_BONUS;
 		if ((black_pawns & file_mask) && !(black_pawns & adjacent))
-			score += ISOLATED_PAWN_SCORE;
+			score += ISOLATED_PAWN_BONUS;
+
+		// Passed pawns
+		Bitboard white_file_pawns = white_pawns & file_mask;
+		Bitboard black_file_pawns = black_pawns & file_mask;
+
+		while (white_file_pawns)
+		{
+			int pawn_square = __builtin_ctzll(white_file_pawns);
+			int rank = pawn_square / 8;
+
+			// Create a mask for all squares in front of the pawn in this and adjacent files
+			Bitboard front_mask = file_mask;
+			if (file > 0) front_mask |= (column << (file - 1));
+			if (file < 7) front_mask |= (column << (file + 1));
+
+			// Mask only squares in front of the pawn
+			front_mask &= ~((1ULL << (rank * 8 + 8)) - 1);
+
+			// If no black pawns in front, it's passed
+			if (!(black_pawns & front_mask))
+				score += PASSED_PAWN_BONUS;
+
+			white_file_pawns &= (white_file_pawns - 1);
+		}
+
+		// Same for black pawns
+		while (black_file_pawns)
+		{
+			int pawn_square = __builtin_ctzll(black_file_pawns);
+			int rank = pawn_square / 8;
+
+			Bitboard front_mask = file_mask;
+			if (file > 0) front_mask |= (column << (file - 1));
+			if (file < 7) front_mask |= (column << (file + 1));
+
+			front_mask &= ((1ULL << (rank * 8)) - 1);
+
+			if (!(white_pawns & front_mask))
+				score -= PASSED_PAWN_BONUS;
+
+			black_file_pawns &= (black_file_pawns - 1);
+		}
+
 	}
 	return score;
 }

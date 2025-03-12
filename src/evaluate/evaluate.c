@@ -24,8 +24,11 @@ int evaluate(const struct position *pos)
 			score[color] += get_piece_square_value(piece, square, get_game_phase(pos));
 		}
 	}
-	int pawn_score = evaluate_pawn_structure(pos);
-	int final_score = (score[WHITE] - score[BLACK]) + pawn_score;
+	int positional_score = 0;
 
+	positional_score += evaluate_pawn_structure(pos);
+	positional_score += evaluate_rook(pos);
+
+	int final_score = (score[WHITE] - score[BLACK]) + positional_score;
 	return (pos->side_to_move == WHITE) ? final_score : -final_score;
 }
