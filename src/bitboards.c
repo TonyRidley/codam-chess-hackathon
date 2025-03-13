@@ -6,8 +6,206 @@
 #include <stdlib.h>
 #include <string.h>
 
+Magic bishop_magics[64];
+Magic rook_magics[64];
+
+static Bitboard bishop_masks[64];
+static Bitboard rook_masks[64];
+
+static Bitboard bishop_attacks[64][512];
+static Bitboard rook_attacks [64][4096];
+
+static const int bishop_directions[4][2] = {{-1,-1}, {-1,1}, {1,-1}, {1,1}};
+static const int rook_directions[4][2] = {{-1,0}, {0,-1}, {1,0}, {0,1}};
+
+//helper functions magic bitboard
+static Bitboard generate_bishop_mask(int square);
+static Bitboard generate_rook_mask(int square);
+static Bitboard generate_bishop_attacks(int square, Bitboard blockers);
+static Bitboard generate_rook_attacks(int square, Bitboard blockers);
+static int count_bits(Bitboard b);
+static int transform_index(Bitboard blockers, Bitboard magic, int bits);
+
 static bool is_en_passant(const struct position *pos, struct move move);
 static bool is_castling(const struct position *pos, struct move move);
+
+void	init_magic_bitboards(void)
+{
+	for (int square = 0; square < 64; square++)
+	{
+		bishop_masks[square] = generate_bishop_mask(square);
+		int bishop_bits = count_bits(bishop_masks[square]);
+		bishop_magics[square].mask = bishop_masks[square];
+        bishop_magics[square].magic = bishop_magic_numbers[square];
+        bishop_magics[square].shift = 64 - bishop_bits;
+        bishop_magics[square].attacks = bishop_attacks[square];
+
+		Bitboard blockers = 0;
+		do
+		{
+			Bitboard attack = generate_bishop_attacks(square, blockers);
+			int index = transform_index(blockers, bishop_magic_numbers[square], bishop_bits);
+			bishop_attacks[square][index] = attack;
+
+			blockers = (blockers - bishop_masks[square]) & bishop_masks[square];
+		} while (blockers);
+		rook_masks[square] = generate_rook_mask(square);
+		int rook_bits = count_bits(rook_masks[square]);
+		rook_magics[square].mask = rook_masks[square];
+        rook_magics[square].magic = rook_magic_numbers[square];
+        rook_magics[square].shift = 64 - rook_bits;
+        rook_magics[square].attacks = rook_attacks[square];
+
+		blockers = 0;
+		do
+		{
+			Bitboard attack = generate_rook_attacks(square, blockers);
+			int index = transform_index(blockers, rook_magic_numbers[square], rook_bits);
+			rook_attacks[square][index] = attack;
+
+			blockers = (blockers - rook_masks[square]) & rook_masks[square];
+		} while (blockers);
+	}
+	printf("Magic bitboards initialized\n");
+}
+
+Bitboard get_bishop_attacks(int square, Bitboard occu)
+{
+	Magic* magic = &bishop_magics[square];
+	occu &= magic->mask;
+	int index = transform_index(occu, magic->magic, 64 - magic->shift);
+	return magic->attacks[index];
+}
+
+Bitboard get_rook_attacks(int square, Bitboard occu)
+{
+	Magic* magic = &rook_magics[square];
+	occu &= magic->mask;
+	int index = transform_index(occu, magic->magic, 64 - magic->shift);
+	return magic->attacks[index];
+}
+
+Bitboard get_queen_attacks(int square, Bitboard occu)
+{
+	return get_bishop_attacks(square, occu) | get_rook_attacks(square, occu);
+}
+
+static int transform_index(Bitboard blockers, Bitboard magic, int bits)
+{
+    return (int)(((blockers * magic) >> (64 - bits)) & ((1ULL << bits) -1));
+}
+
+static int count_bits(Bitboard b)
+{
+    return __builtin_popcountll(b);
+}
+
+static Bitboard generate_bishop_mask(int square)
+{
+    Bitboard mask = 0;
+    int rank = square / 8;
+    int file = square % 8;
+
+    for (int i = 0; i < 4; i++)
+	{
+        int dr = bishop_directions[i][0];
+        int df = bishop_directions[i][1];
+
+        for (int j = 1; j < 7; j++)
+		{
+            int r = rank + j * dr;
+            int f = file + j * df;
+
+            if (r < 0 || r > 7 || f < 0 || f > 7)
+				break;
+            int target_square = r * 8 + f;
+            mask |= (1ULL << target_square);
+            if (r == 0 || r == 7 || f == 0 || f == 7)
+				 break;
+        }
+    }
+    return mask;
+}
+
+static Bitboard generate_rook_mask(int square) {
+    Bitboard mask = 0;
+    int rank = square / 8;
+    int file = square % 8;
+
+    for (int i = 0; i < 4; i++)
+	{
+        int dr = rook_directions[i][0];
+        int df = rook_directions[i][1];
+
+        for (int j = 1; j < 7; j++)
+		{
+            int r = rank + j * dr;
+            int f = file + j * df;
+
+            if (r < 0 || r > 7 || f < 0 || f > 7)
+				break;
+            int target_square = r * 8 + f;
+            mask |= (1ULL << target_square);
+            if (r == 0 || r == 7 || f == 0 || f == 7)
+				break;
+        }
+    }
+
+    return mask;
+}
+
+static Bitboard generate_bishop_attacks(int square, Bitboard blockers) {
+    Bitboard attacks = 0;
+    int rank = square / 8;
+    int file = square % 8;
+
+    for (int i = 0; i < 4; i++)
+	{
+        int dr = bishop_directions[i][0];
+        int df = bishop_directions[i][1];
+
+        for (int j = 1; j <= 7; j++)
+		{
+            int r = rank + j * dr;
+            int f = file + j * df;
+
+            if (r < 0 || r > 7 || f < 0 || f > 7)
+				break;
+            int target_square = r * 8 + f;
+            attacks |= (1ULL << target_square);
+            if (blockers & (1ULL << target_square))
+				 break;
+        }
+    }
+    return attacks;
+}
+
+static Bitboard generate_rook_attacks(int square, Bitboard blockers) {
+    Bitboard attacks = 0;
+    int rank = square / 8;
+    int file = square % 8;
+
+    for (int i = 0; i < 4; i++)
+	{
+        int dr = rook_directions[i][0];
+        int df = rook_directions[i][1];
+
+        for (int j = 1; j <= 7; j++)
+		{
+            int r = rank + j * dr;
+            int f = file + j * df;
+
+            if (r < 0 || r > 7 || f < 0 || f > 7)
+				break;
+            int target_square = r * 8 + f;
+            attacks |= (1ULL << target_square);
+            if (blockers & (1ULL << target_square))
+				break;
+        }
+    }
+
+    return attacks;
+}
 
 void init_bitboards(struct position *pos)
 {
@@ -21,6 +219,7 @@ void init_bitboards(struct position *pos)
 			SET_BIT(pos->bitboards[COLOR(piece)][TYPE(piece)], square);
 		}
 	}
+	init_magic_bitboards();
 	printf("Bitboards initialized\n");
 }
 

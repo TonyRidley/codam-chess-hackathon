@@ -145,7 +145,6 @@ int is_legal(const struct position *pos, struct move move)
 
 	/* make the move on a copy of the position.                              */
 	do_move(&copy, move);
-
 	/* for castling moves, pretend there is another king on all squares      */
 	/* between the from square and the to square. this makes it illegal to   */
 	/* castle through a square that is controlled by the opponent.           */

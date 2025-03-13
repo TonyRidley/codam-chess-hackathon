@@ -75,6 +75,7 @@ void perft_run(void)
 			continue;
 		}
 		init_bitboards(&pos);
+		
 		nodes = perft(&pos, data.depth);
 
 		if (nodes != data.nodes)

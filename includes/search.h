@@ -1,6 +1,8 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
+#include <stdbool.h>
+
 #include "position.h"
 #include "move.h"
 #include "uci.h"
@@ -17,6 +19,9 @@ struct search_info {
 
 	/* increment in milliseconds for both players.                           */
 	int increment[2];
+	int depth;
+	struct opening_book *book;
+	int ply;
 };
 
 /* the return type of `minimax`                                              */
@@ -37,7 +42,20 @@ typedef struct s_table
 	struct move	best_move;
 }	t_table;
 
+// Add to your header file
+struct book_entry {
+	__uint64_t hash;      // Position hash
+	uint16_t from_square; // From square (0-63)
+	uint16_t to_square;   // To square (0-63)
+	uint32_t count;       // Number of times this move appeared
+	uint8_t side;
+};
 
+struct opening_book {
+	struct book_entry *entries;
+	size_t num_entries;
+	int max_ply;  // Maximum number of moves (10 in your case)
+};
 
 /* in essence, `minimax` is just another evaluation function. it looks some  */
 /* number of moves into the future and returns the value of the best         */
@@ -156,6 +174,12 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 /* https://www.chessprogramming.org/Time_Management                          */
 /* https://www.chessprogramming.org/Iterative_Deepening                      */
 /* https://www.chessprogramming.org/Opening_Book                             */
-struct move search(const struct search_info *info);
+struct opening_book* load_opening_book(const char *filename);
+struct move get_book_move(const struct position *pos, const struct opening_book *book, int current_ply);
+struct move search(struct search_info *info);
+__uint64_t	get_hash(const struct position *pos);
+__uint64_t update_z_table(__uint64_t hash, int from, int to, int piece);
+void	store_results(__uint64_t hash, int score, int depth, struct move best_move);
+bool	get_results(__uint64_t hash, int *prev_score, int depth, struct move *prev_move);
 
 #endif

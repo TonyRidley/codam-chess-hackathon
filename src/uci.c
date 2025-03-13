@@ -121,21 +121,12 @@ __uint64_t get_random64()
 	return ((__uint64_t)rand() << 32 | ((__uint64_t)rand()));
 }
 
-void	init_z_hash()
-{
-	for (int i = 0; i < 64; i++)
-	{
-		for (int j = 0; j < 12; j++)
-		{
-			z_table[i][j] = get_random64();
-		}
-	}
-}
-
 static void uci_go(const struct position *pos, char *token, char *store)
 {
 	struct search_info info;
 	struct move move;
+	printf("test\n");
+	struct opening_book *book = load_opening_book("opening_book.bin");
 	char buffer[] = { '\0', '\0', '\0', '\0', '\0', '\0' };
 
 	info.pos = pos;
@@ -143,8 +134,8 @@ static void uci_go(const struct position *pos, char *token, char *store)
 	info.time[BLACK] = 0;
 	info.increment[WHITE] = 0;
 	info.increment[BLACK] = 0;
-
-	// init_z_hash();
+	info.book = book;
+	
 	while ((token = get_token(token, store)))
 		{
 		if (!strcmp(token, "searchmoves"))
@@ -209,7 +200,6 @@ void uci_run(const char *name, const char *author)
 	char *line;
 	int quit = 0;
 	struct position pos;
-
 	while (!quit && (line = get_line(stdin)))
 	{
 		char *token = line;

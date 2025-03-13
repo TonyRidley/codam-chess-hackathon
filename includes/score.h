@@ -7,4 +7,15 @@
 #define ROOK_OPEN_FILE_BONUS 25
 #define ROOK_SEMI_OPEN_FILE_BONUS 10
 
+static const int MOBILITY_BONUS[6] = {
+	0,  // Pawn
+	0,  // Knight
+	1,  // Bishop
+	1,  // Rook
+	1,  // Queen
+	0   // King
+};
+
+
+
 #endif
