@@ -7,6 +7,8 @@
 #include <string.h>
 #include <ctype.h>
 
+uint64_t z_table[64][12];
+
 static char *get_line(FILE *stream)
 {
 	size_t capacity = 1024;
@@ -114,6 +116,22 @@ static void uci_position(struct position *pos, char *token, char *store)
 	}
 }
 
+__uint64_t get_random64()
+{
+	return ((__uint64_t)rand() << 32 | ((__uint64_t)rand()));
+}
+
+void	init_z_hash()
+{
+	for (int i = 0; i < 64; i++)
+	{
+		for (int j = 0; j < 12; j++)
+		{
+			z_table[i][j] = get_random64();
+		}
+	}
+}
+
 static void uci_go(const struct position *pos, char *token, char *store)
 {
 	struct search_info info;
@@ -126,6 +144,7 @@ static void uci_go(const struct position *pos, char *token, char *store)
 	info.increment[WHITE] = 0;
 	info.increment[BLACK] = 0;
 
+	init_z_hash();
 	while ((token = get_token(token, store)))
 		{
 		if (!strcmp(token, "searchmoves"))

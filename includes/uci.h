@@ -9,6 +9,13 @@
 /* search options are not implemented.                                       */
 /*                                                                           */
 /* https://www.chessprogramming.org/UCI                                      */
+
+#include "stdint.h"
+
+extern __uint64_t	z_table[64][12];
+
+__uint64_t get_random64();
+void	init_z_hash();
 void uci_run(const char *name, const char *author);
 
 #endif

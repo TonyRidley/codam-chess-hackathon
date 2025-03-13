@@ -3,6 +3,9 @@
 
 #include "position.h"
 #include "move.h"
+#include "uci.h"
+#define	TABLE_MAX	1000000
+
 
 /* information passed to the search function.                                */
 struct search_info {
@@ -24,6 +27,17 @@ struct search_result {
 	/* the score of the position passed to `minimax`.                        */
 	int score;
 };
+
+/*transposition table struct which stores all results*/
+typedef struct s_table
+{
+	__uint64_t	hash;
+	int			score;
+	int			depth;
+	struct move	best_move;
+}	t_table;
+
+
 
 /* in essence, `minimax` is just another evaluation function. it looks some  */
 /* number of moves into the future and returns the value of the best         */
