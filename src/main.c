@@ -7,6 +7,8 @@
 
 int main(void)
 {
+	init_z_hash();
+
 #if PERFT
 	perft_run();
 #else

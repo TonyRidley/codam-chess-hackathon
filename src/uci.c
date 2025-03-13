@@ -144,7 +144,7 @@ static void uci_go(const struct position *pos, char *token, char *store)
 	info.increment[WHITE] = 0;
 	info.increment[BLACK] = 0;
 
-	init_z_hash();
+	// init_z_hash();
 	while ((token = get_token(token, store)))
 		{
 		if (!strcmp(token, "searchmoves"))
