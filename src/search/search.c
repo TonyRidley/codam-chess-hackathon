@@ -6,7 +6,7 @@
 /*   By: dsewlia <dsewlia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 10:01:13 by dsewlia           #+#    #+#             */
-/*   Updated: 2025/03/13 10:01:15 by dsewlia          ###   ########.fr       */
+/*   Updated: 2025/03/13 10:14:33 by dsewlia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,10 +100,10 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 	{
 		struct position copy = *pos;
 		int score;
-		hash = update_z_table(hash, moves[i].from_square, moves[i].to_square, pos->board[i]);
 		/* do a move, the current player in `copy` is then the opponent, */
 		/* and so when we call minimax we get the score of the opponent. */
 		do_move(&copy, moves[i]);
+		hash = update_z_table(hash, moves[i].from_square, moves[i].to_square, pos->board[i]);
 		/* minimax is called recursively. this call returns the score of */
 		/* the opponent, so we must negate it to get our score.          */
 		score = minimax(&copy, depth - 1, alpha, beta).score;
@@ -135,5 +135,5 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 
 struct move search(const struct search_info *info)
 {
-	return minimax(info->pos, 4, INT_MIN, INT_MAX).move;
+	return minimax(info->pos, 6, INT_MIN, INT_MAX).move;
 }
