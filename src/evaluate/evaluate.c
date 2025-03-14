@@ -3,50 +3,32 @@
 
 const int piece_value[6] = { 100, 320, 330, 500, 900, 20000 };
 
-static inline int evaluate_material(const struct position *pos)
-{
-	int score[2] = { 0, 0 };
-
-	for (int color = WHITE; color <= BLACK; color++) {
-		for (int piece_type = PAWN; piece_type <= KING; piece_type++) {
-			Bitboard piece_bb = pos->bitboards[color][piece_type];
-			int piece_count = __builtin_popcountll(piece_bb);
-			score[color] += piece_value[piece_type] * piece_count;
-		}
-	}
-
-	return score[WHITE] - score[BLACK];
-}
-
-// Calculate piece square table values using bitboards
-static inline int evaluate_piece_square_tables(const struct position *pos, float phase_pct)
-{
-	int score[2] = { 0, 0 };
-
-	for (int color = WHITE; color <= BLACK; color++) {
-		for (int piece_type = PAWN; piece_type <= KING; piece_type++) {
-			Bitboard piece_bb = pos->bitboards[color][piece_type];
-			while (piece_bb) {
-				int square = __builtin_ctzll(piece_bb);
-				int piece = pos->board[square];
-				score[color] += get_piece_square_value(piece, square, phase_pct);
-				piece_bb &= (piece_bb - 1);
-			}
-		}
-	}
-
-	return score[WHITE] - score[BLACK];
-}
-
 int evaluate(const struct position *pos)
 {
-	float phase_pct = get_game_phase(pos);
+	int score[2] = { 0, 0 };
+	int square;
 
-	int material_score = evaluate_material(pos);
-	int pst_score = evaluate_piece_square_tables(pos, phase_pct);
-	int positional_score = evaluate_pawn_structure(pos) + evaluate_rook(pos);
-	int end_game_score = evaluate_king_corner_endgame(pos, phase_pct);
+	for (square = 0; square < 64; square++)
+	{
+		int piece = pos->board[square];
 
-	int final_score = material_score + pst_score + positional_score + end_game_score;
+		if (piece != NO_PIECE)
+		{
+			int color = COLOR(piece);
+			int type = TYPE(piece);
+
+			// Material value
+			score[color] += piece_value[type];
+
+			// Piece square table value
+			score[color] += get_piece_square_value(piece, square, get_game_phase(pos));
+		}
+	}
+	int positional_score = 0;
+
+	positional_score += evaluate_pawn_structure(pos);
+	positional_score += evaluate_rook(pos);
+
+	int final_score = (score[WHITE] - score[BLACK]) + positional_score;
 	return (pos->side_to_move == WHITE) ? final_score : -final_score;
 }

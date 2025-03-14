@@ -80,8 +80,7 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
     return result;
 }
 
-
-struct move search(struct search_info *info) {
+struct move search(const struct search_info *info) {
     static int ply = 0;
 
     // Try book moves first (if we're in early game)
@@ -112,5 +111,3 @@ struct move search(struct search_info *info) {
     ply++;
     return best_result.move;
 }
-
-
