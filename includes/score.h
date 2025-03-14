@@ -6,6 +6,10 @@
 #define PASSED_PAWN_BONUS 40
 #define ROOK_OPEN_FILE_BONUS 25
 #define ROOK_SEMI_OPEN_FILE_BONUS 10
+#define CONTEMPT_FACTOR 50
+#define MATERIAL_THRESHOLD 200
+
+
 
 static const int MOBILITY_BONUS[6] = {
 	0,  // Pawn

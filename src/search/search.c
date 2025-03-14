@@ -1,140 +1,116 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   search.c                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/13 10:01:13 by dsewlia           #+#    #+#             */
-/*   Updated: 2025/03/14 03:36:08 by marvin           ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "search.h"
 #include "evaluate.h"
 #include "generate.h"
+#include "transposition_table.h"
 #include "types.h"
-#include <limits.h>
-#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
 
-t_table	table[TABLE_MAX];
+static int history[2][64][64];
 
-// void	init_z_hash()
-// {
-// 	for (int i = 0; i < 64; i++)
-// 	{
-// 		for (int j = 0; j < 12; j++)
-// 		{
-// 			z_table[i][j] = get_random64();
-// 		}
-// 	}
-// }
+static int score_move(const struct position *pos, struct move move) {
+    int score = 0;
+    int piece = pos->board[move.from_square];
+    int captured = pos->board[move.to_square];
 
-__uint64_t	get_hash(const struct position *pos)
-{
-	__uint64_t	hash = 0;
-	for (int i = 0; i < 64; i++)
-	{
-		if (pos->board[i] != NO_PIECE)
-		{
-			hash ^= z_table[i][pos->board[i]];
-		}
-	}
-	return (hash);
+    if (captured != NO_PIECE) {
+        score = 10 * piece_value[TYPE(captured)] - piece_value[TYPE(piece)];
+    }
+    if (move.promotion_type != NO_TYPE) {
+        score += piece_value[move.promotion_type];
+    }
+    score += history[pos->side_to_move][move.from_square][move.to_square];
+    return score;
 }
 
-__uint64_t update_z_table(__uint64_t hash, int from, int to, int piece)
-{
-	hash ^= z_table[from][piece];
-	hash ^= z_table[to][piece];
-	return (hash);
+static void order_moves(const struct position *pos, struct move *moves, size_t count) {
+    for (size_t i = 0; i < count - 1; i++) {
+        for (size_t j = 0; j < count - i - 1; j++) {
+            if (score_move(pos, moves[j]) < score_move(pos, moves[j+1])) {
+                struct move temp = moves[j];
+                moves[j] = moves[j+1];
+                moves[j+1] = temp;
+            }
+        }
+    }
 }
 
-void	store_results(__uint64_t hash, int score, int depth, struct move best_move)
-{
-	int	index = hash % TABLE_MAX;
-	table[index].hash = hash;
-	table[index].score = score;
-	table[index].depth = depth;
-	table[index].best_move = best_move;
+struct search_result minimax(const struct position *pos, int depth, int alpha, int beta) {
+    struct search_result result;
+    result.score = -1000000;
+    result.move.from_square = 0;
+    result.move.to_square = 0;
+
+    if (depth == 0) {
+        result.score = evaluate(pos);
+        return result;
+    }
+
+    struct move moves[MAX_MOVES];
+    size_t count = generate_legal_moves(pos, moves);
+
+    if (count == 0) {
+        result.score = -900000;
+        return result;
+    }
+
+    order_moves(pos, moves, count);
+
+    for (size_t i = 0; i < count; i++) {
+        struct position new_pos = *pos;
+        do_move(&new_pos, moves[i]);
+        
+        int score = -minimax(&new_pos, depth - 1, -beta, -alpha).score;
+
+        if (score > result.score) {
+            result.score = score;
+            result.move = moves[i];
+
+            if (score > alpha) {
+                alpha = score;
+                if (alpha >= beta) {
+                    break;
+                }
+            }
+        }
+    }
+
+    return result;
 }
 
-bool	get_results(__uint64_t hash, int *prev_score, int depth, struct move *prev_move)
-{
-	int	index = hash % TABLE_MAX;
-	if (table[index].hash == hash && table[index].depth >= depth)
-	{
-		*prev_score = table[index].score;
-		*prev_move = table[index].best_move;
-		return (true);
-	}
-	return (false);
+
+struct move search(struct search_info *info) {
+    static int ply = 0;
+
+    // Try book moves first (if we're in early game)
+    if (info->book && ply < 20) {
+        struct move book_move = get_book_move(info->pos, info->book, ply);
+        if (book_move.from_square && book_move.to_square) {
+            ply++;
+            return book_move;
+        }
+    }
+
+    struct search_result best_result = {0};
+    const int max_depth = 8;
+    time_t start_time = time(NULL);
+
+    // Iterative deepening
+    for (int depth = 1; depth <= max_depth; depth++) {
+        struct search_result result = minimax(info->pos, depth, -1000000, 1000000);
+        best_result = result;
+
+        // Time management
+        time_t current_time = time(NULL);
+        if ((int)(current_time - start_time) >= 1) {  // 1 second per move
+            break;
+        }
+    }
+
+    ply++;
+    return best_result.move;
 }
 
-struct search_result minimax(const struct position *pos, int depth, int alpha, int beta)
-{
-	struct search_result result;
 
-
-	//if leaf node->evaluate position
-	if (depth == 0)
-	{
-		result.score = evaluate(pos);
-		return (result);
-	}
-	//if maximizing position, evaluate alpha and prune at depth 1
-	if (depth % 2 == 0)
-	{
-		int score;
-		struct move moves[MAX_MOVES];
-		//to generate count of child nodes
-		size_t count = generate_legal_moves(pos, moves);
-		result.score = INT_MIN;
-		for (size_t i = 0; i < count; i++)
-		{
-			struct position copy = *pos;
-			do_move(&copy, moves[i]);
-			//recursive call for next depth
-			score = minimax(&copy, depth - 1, alpha, beta).score;
-			if (score > result.score)
-			{
-				result.score = score;
-				result.move = moves[i];
-			}
-			if (score > alpha)
-				alpha = score;
-			//pruning
-			if (alpha >= beta)
-				break ;
-		}
-	}
-	//if minimizing position, evaluate beta and prune at depth 1
-	else
-	{
-		int score;
-		struct move moves[MAX_MOVES];
-		size_t count = generate_legal_moves(pos, moves);
-		result.score = INT_MAX;
-		for (size_t i = 0; i < count; i++)
-		{
-			struct position copy = *pos;
-			do_move(&copy, moves[i]);
-			score = minimax(&copy, depth - 1, alpha, beta).score;
-			if (score < result.score)
-			{
-				result.score = score;
-				result.move = moves[i];
-			}
-			if (score < beta)
-				beta = score;
-			if (alpha >= beta)
-				break ;
-		}
-	}
-	return result;
-}
-
-struct move search(const struct search_info *info)
-{
-	return minimax(info->pos, 6, INT_MIN, INT_MAX).move;
-}

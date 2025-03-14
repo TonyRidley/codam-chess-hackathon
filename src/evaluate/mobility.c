@@ -42,7 +42,6 @@ int evaluate_mobility(const struct position *pos)
             if (square >= 0 && square < 64)  // Bounds check
             {
                 Bitboard attacks = get_piece_attacks(type, square, occupancy);
-                printf("Attacks bitboard: %lx\n", attacks);
                 Bitboard white_occupied = 0ULL;
                 for (int t = 0; t < 6; t++)
                     white_occupied |= pos->bitboards[WHITE][t];

@@ -7,8 +7,6 @@
 #include <string.h>
 #include <ctype.h>
 
-uint64_t z_table[64][12];
-
 static char *get_line(FILE *stream)
 {
 	size_t capacity = 1024;
@@ -114,11 +112,6 @@ static void uci_position(struct position *pos, char *token, char *store)
 				do_move(pos, move);
 		}
 	}
-}
-
-__uint64_t get_random64()
-{
-	return ((__uint64_t)rand() << 32 | ((__uint64_t)rand()));
 }
 
 static void uci_go(const struct position *pos, char *token, char *store)

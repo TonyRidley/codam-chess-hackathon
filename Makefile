@@ -11,7 +11,7 @@ CHESS_SRC = src/evaluate/evaluate.c src/evaluate/game_phase.c src/evaluate/piece
             src/search/search.c src/bitboards.c src/evaluate/pawn_structure.c \
             src/generate.c src/main.c src/move.c src/parse.c src/evaluate/rook.c \
             src/perft.c src/position.c src/uci.c src/evaluate/endgame.c src/search/opening_book.c \
-            src/evaluate/mobility.c
+            src/evaluate/mobility.c src/zobrist_hashing.c src/search/transposition_table.c
 
 # Objects
 OBJ_DIR = obj

@@ -67,20 +67,17 @@ struct move get_book_move(const struct position *pos, const struct opening_book 
     }
     
     __uint64_t pos_hash = get_hash(pos);
-    printf("[DEBUG] Searching for position hash: %lu\n", pos_hash);
     
     // Binary search in the book
     int left = 0;
     int right = book->num_entries - 1;
-    int best_count = 0;
+    unsigned int best_count = 0;
     struct move best_move = empty_move;
     int found_index = -1;
     
     // First, find any matching position
     while (left <= right) {
         int mid = (left + right) / 2;
-        printf("[DEBUG] Binary search: left=%d, mid=%d, right=%d, checking hash: %lu\n", 
-               left, mid, right, book->entries[mid].hash);
         
         if (book->entries[mid].hash == pos_hash) {
             found_index = mid;
@@ -134,12 +131,9 @@ struct move get_book_move(const struct position *pos, const struct opening_book 
             }
             current++;
         }
-        
-        printf("[DEBUG] Found best move with count %d! from_square: %d, to_square: %d\n",
-               best_count, best_move.from_square, best_move.to_square);
+
         return best_move;
     }
-    
-    printf("[DEBUG] No matching position found in book\n");
+
     return empty_move;
 }
