@@ -36,9 +36,9 @@ void	init_magic_bitboards(void)
 		bishop_masks[square] = generate_bishop_mask(square);
 		int bishop_bits = count_bits(bishop_masks[square]);
 		bishop_magics[square].mask = bishop_masks[square];
-        bishop_magics[square].magic = bishop_magic_numbers[square];
-        bishop_magics[square].shift = 64 - bishop_bits;
-        bishop_magics[square].attacks = bishop_attacks[square];
+		bishop_magics[square].magic = bishop_magic_numbers[square];
+		bishop_magics[square].shift = 64 - bishop_bits;
+		bishop_magics[square].attacks = bishop_attacks[square];
 
 		Bitboard blockers = 0;
 		do
@@ -52,9 +52,9 @@ void	init_magic_bitboards(void)
 		rook_masks[square] = generate_rook_mask(square);
 		int rook_bits = count_bits(rook_masks[square]);
 		rook_magics[square].mask = rook_masks[square];
-        rook_magics[square].magic = rook_magic_numbers[square];
-        rook_magics[square].shift = 64 - rook_bits;
-        rook_magics[square].attacks = rook_attacks[square];
+		rook_magics[square].magic = rook_magic_numbers[square];
+		rook_magics[square].shift = 64 - rook_bits;
+		rook_magics[square].attacks = rook_attacks[square];
 
 		blockers = 0;
 		do
@@ -92,119 +92,119 @@ Bitboard get_queen_attacks(int square, Bitboard occu)
 
 static int transform_index(Bitboard blockers, Bitboard magic, int bits)
 {
-    return (int)(((blockers * magic) >> (64 - bits)) & ((1ULL << bits) -1));
+	return (int)(((blockers * magic) >> (64 - bits)) & ((1ULL << bits) -1));
 }
 
 static int count_bits(Bitboard b)
 {
-    return __builtin_popcountll(b);
+	return __builtin_popcountll(b);
 }
 
 static Bitboard generate_bishop_mask(int square)
 {
-    Bitboard mask = 0;
-    int rank = square / 8;
-    int file = square % 8;
+	Bitboard mask = 0;
+	int rank = square / 8;
+	int file = square % 8;
 
-    for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
-        int dr = bishop_directions[i][0];
-        int df = bishop_directions[i][1];
+		int dr = bishop_directions[i][0];
+		int df = bishop_directions[i][1];
 
-        for (int j = 1; j < 7; j++)
+		for (int j = 1; j < 7; j++)
 		{
-            int r = rank + j * dr;
-            int f = file + j * df;
+			int r = rank + j * dr;
+			int f = file + j * df;
 
-            if (r < 0 || r > 7 || f < 0 || f > 7)
+			if (r < 0 || r > 7 || f < 0 || f > 7)
 				break;
-            int target_square = r * 8 + f;
-            mask |= (1ULL << target_square);
-            if (r == 0 || r == 7 || f == 0 || f == 7)
+			int target_square = r * 8 + f;
+			mask |= (1ULL << target_square);
+			if (r == 0 || r == 7 || f == 0 || f == 7)
 				 break;
-        }
-    }
-    return mask;
+		}
+	}
+	return mask;
 }
 
 static Bitboard generate_rook_mask(int square) {
-    Bitboard mask = 0;
-    int rank = square / 8;
-    int file = square % 8;
+	Bitboard mask = 0;
+	int rank = square / 8;
+	int file = square % 8;
 
-    for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
-        int dr = rook_directions[i][0];
-        int df = rook_directions[i][1];
+		int dr = rook_directions[i][0];
+		int df = rook_directions[i][1];
 
-        for (int j = 1; j < 7; j++)
+		for (int j = 1; j < 7; j++)
 		{
-            int r = rank + j * dr;
-            int f = file + j * df;
+			int r = rank + j * dr;
+			int f = file + j * df;
 
-            if (r < 0 || r > 7 || f < 0 || f > 7)
+			if (r < 0 || r > 7 || f < 0 || f > 7)
 				break;
-            int target_square = r * 8 + f;
-            mask |= (1ULL << target_square);
-            if (r == 0 || r == 7 || f == 0 || f == 7)
+			int target_square = r * 8 + f;
+			mask |= (1ULL << target_square);
+			if (r == 0 || r == 7 || f == 0 || f == 7)
 				break;
-        }
-    }
+		}
+	}
 
-    return mask;
+	return mask;
 }
 
 static Bitboard generate_bishop_attacks(int square, Bitboard blockers) {
-    Bitboard attacks = 0;
-    int rank = square / 8;
-    int file = square % 8;
+	Bitboard attacks = 0;
+	int rank = square / 8;
+	int file = square % 8;
 
-    for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
-        int dr = bishop_directions[i][0];
-        int df = bishop_directions[i][1];
+		int dr = bishop_directions[i][0];
+		int df = bishop_directions[i][1];
 
-        for (int j = 1; j <= 7; j++)
+		for (int j = 1; j <= 7; j++)
 		{
-            int r = rank + j * dr;
-            int f = file + j * df;
+			int r = rank + j * dr;
+			int f = file + j * df;
 
-            if (r < 0 || r > 7 || f < 0 || f > 7)
+			if (r < 0 || r > 7 || f < 0 || f > 7)
 				break;
-            int target_square = r * 8 + f;
-            attacks |= (1ULL << target_square);
-            if (blockers & (1ULL << target_square))
+			int target_square = r * 8 + f;
+			attacks |= (1ULL << target_square);
+			if (blockers & (1ULL << target_square))
 				 break;
-        }
-    }
-    return attacks;
+		}
+	}
+	return attacks;
 }
 
 static Bitboard generate_rook_attacks(int square, Bitboard blockers) {
-    Bitboard attacks = 0;
-    int rank = square / 8;
-    int file = square % 8;
+	Bitboard attacks = 0;
+	int rank = square / 8;
+	int file = square % 8;
 
-    for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
-        int dr = rook_directions[i][0];
-        int df = rook_directions[i][1];
+		int dr = rook_directions[i][0];
+		int df = rook_directions[i][1];
 
-        for (int j = 1; j <= 7; j++)
+		for (int j = 1; j <= 7; j++)
 		{
-            int r = rank + j * dr;
-            int f = file + j * df;
+			int r = rank + j * dr;
+			int f = file + j * df;
 
-            if (r < 0 || r > 7 || f < 0 || f > 7)
+			if (r < 0 || r > 7 || f < 0 || f > 7)
 				break;
-            int target_square = r * 8 + f;
-            attacks |= (1ULL << target_square);
-            if (blockers & (1ULL << target_square))
+			int target_square = r * 8 + f;
+			attacks |= (1ULL << target_square);
+			if (blockers & (1ULL << target_square))
 				break;
-        }
-    }
+		}
+	}
 
-    return attacks;
+	return attacks;
 }
 
 void init_bitboards(struct position *pos)
