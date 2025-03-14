@@ -349,3 +349,27 @@ void verify_board_state(const struct position *pos)
 		}
 	}
 }
+
+Bitboard get_knight_attacks(int square) {
+	Bitboard attacks = 0ULL;
+	Bitboard bb = 1ULL << square;
+    
+	// North-North-East
+	attacks |= (bb << 17) & ~0x0101010101010101ULL;
+	// North-North-West
+	attacks |= (bb << 15) & ~0x8080808080808080ULL;
+	// North-East-East
+	attacks |= (bb << 10) & ~0x0303030303030303ULL;
+	// North-West-West
+	attacks |= (bb << 6) & ~0xC0C0C0C0C0C0C0C0ULL;
+	// South-East-East
+	attacks |= (bb >> 6) & ~0x0303030303030303ULL;
+	// South-West-West
+	attacks |= (bb >> 10) & ~0xC0C0C0C0C0C0C0C0ULL;
+	// South-South-East
+	attacks |= (bb >> 15) & ~0x0101010101010101ULL;
+	// South-South-West
+	attacks |= (bb >> 17) & ~0x8080808080808080ULL;
+    
+	return attacks;
+}

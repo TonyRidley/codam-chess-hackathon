@@ -27,6 +27,7 @@ void	update_bitboards_with_move(struct move move, struct position *pos);
 
 //magic bitboard functions
 void init_magic_bitboards(void);
+Bitboard get_knight_attacks(int square);
 Bitboard get_bishop_attacks(int square, Bitboard occupancy);
 Bitboard get_rook_attacks(int square, Bitboard occupancy);
 Bitboard get_queen_attacks(int square, Bitboard occupancy);
