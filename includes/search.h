@@ -145,7 +145,6 @@ struct opening_book {
 /* https://www.chessprogramming.org/Move_Ordering                            */
 /* https://www.chessprogramming.org/Transposition_Table                      */
 /* https://www.chessprogramming.org/Quiescence_Search                        */
-struct search_result minimax(const struct position *pos, int depth, int alpha, int beta);
 /* the search function sets up the search parameters and calls `minimax` to  */
 /* starts searching. our basic implementation always starts a search at a    */
 /* fixed depth of 4.                                                         */
@@ -181,7 +180,7 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 /* https://www.chessprogramming.org/Opening_Book                             */
 struct opening_book* load_opening_book(const char *filename);
 struct move get_book_move(const struct position *pos, const struct opening_book *book, int current_ply);
-struct move search(struct search_info *info);
+struct move search(const struct search_info *info);
 __uint64_t	get_hash(const struct position *pos);
 __uint64_t update_z_table(__uint64_t hash, int from, int to, int piece);
 void	store_results(__uint64_t hash, int score, int depth, struct move best_move);
