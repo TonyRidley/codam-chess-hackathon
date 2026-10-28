@@ -1,140 +1,125 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   search.c                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: dsewlia <dsewlia@student.42.fr>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/13 10:01:13 by dsewlia           #+#    #+#             */
-/*   Updated: 2025/03/13 12:04:34 by dsewlia          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "search.h"
 #include "evaluate.h"
 #include "generate.h"
 #include "types.h"
-#include <limits.h>
-#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
 
-t_table	table[TABLE_MAX];
+static int history[2][64][64];
 
+static int score_move(const struct position *pos, struct move move) {
+    int score = 0;
+    int piece = pos->board[move.from_square];
+    int captured = pos->board[move.to_square];
 
-
-// void	init_z_hash()
-// {
-// 	for (int i = 0; i < 64; i++)
-// 	{
-// 		for (int j = 0; j < 12; j++)
-// 		{
-// 			z_table[i][j] = get_random64();
-// 		}
-// 	}
-// }
-
-__uint64_t	get_hash(const struct position *pos)
-{
-	__uint64_t	hash = 0;
-	for (int i = 0; i < 64; i++)
-	{
-		if (pos->board[i] != NO_PIECE)
-		{
-			hash ^= z_table[i][pos->board[i]];
-		}
-	}
-	return (hash);
+    if (captured != NO_PIECE) {
+        score = 10 * piece_value[TYPE(captured)] - piece_value[TYPE(piece)];
+    }
+    if (move.promotion_type != NO_TYPE) {
+        score += piece_value[move.promotion_type];
+    }
+    score += history[pos->side_to_move][move.from_square][move.to_square];
+    return score;
 }
 
-__uint64_t update_z_table(__uint64_t hash, int from, int to, int piece)
-{
-	hash ^= z_table[from][piece];
-	hash ^= z_table[to][piece];
-	return (hash);
+static void order_moves(const struct position *pos, struct move *moves, size_t count) {
+    for (size_t i = 0; i < count - 1; i++) {
+        for (size_t j = 0; j < count - i - 1; j++) {
+            if (score_move(pos, moves[j]) < score_move(pos, moves[j+1])) {
+                struct move temp = moves[j];
+                moves[j] = moves[j+1];
+                moves[j+1] = temp;
+            }
+        }
+    }
 }
 
-void	store_results(__uint64_t hash, int score, int depth, struct move best_move)
-{
-	int	index = hash % TABLE_MAX;
-	table[index].hash = hash;
-	table[index].score = score;
-	table[index].depth = depth;
-	table[index].best_move = best_move;
+struct search_result minimax(const struct position *pos, int depth, int alpha, int beta) {
+    struct search_result result;
+    result.score = -1000000;
+
+    if (depth == 0) {
+        result.score = evaluate(pos);
+        return result;
+    }
+
+    struct move moves[MAX_MOVES];
+    size_t count = generate_legal_moves(pos, moves);
+
+    if (count == 0) {
+        result.score = -900000;
+        return result;
+    }
+
+    order_moves(pos, moves, count);
+
+    for (size_t i = 0; i < count; i++) {
+        struct position copy = *pos;
+        do_move(&copy, moves[i]);
+        int score = -minimax(&copy, depth - 1, -beta, -alpha).score;
+
+        if (score > result.score) {
+            result.move = moves[i];
+            result.score = score;
+            if (score > alpha) {
+                alpha = score;
+                if (pos->board[moves[i].to_square] == NO_PIECE) {
+                    history[pos->side_to_move][moves[i].from_square][moves[i].to_square] += depth * depth;
+                }
+            }
+            if (alpha >= beta) {
+                break;
+            }
+        }
+    }
+    return result;
 }
 
-bool	get_results(__uint64_t hash, int *prev_score, int depth, struct move *prev_move)
-{
-	int	index = hash % TABLE_MAX;
-	if (table[index].hash == hash && table[index].depth >= depth)
-	{
-		*prev_score = table[index].score;
-		*prev_move = table[index].best_move;
-		return (true);
-	}
-	return (false);
-}
+struct move search(struct search_info *info) {
+    static int ply = 0;
 
-struct search_result minimax(const struct position *pos, int depth, int alpha, int beta)
-{
-	struct search_result result;
+    if (info->book && ply < 20) {
+        struct move book_move = get_book_move(info->pos, info->book, ply);
+        if (book_move.from_square && book_move.to_square) {
+            ply++;
+            return book_move;
+        }
+    }
 
-	__uint64_t	hash = get_hash(pos);
-	struct move	prev_move;
-	int			prev_score;
-	if (get_results(hash, &prev_score, depth, &prev_move) == true)
-	{
-		result.score = prev_score;
-		result.move = prev_move;
-		return (result);
-	}
-	if (depth == 0) {
-		/* we have reached our search depth, so evaluate the position.       */
-		result.score = evaluate(pos);
-		return (result);
-	}
-	struct move moves[MAX_MOVES];
-	size_t count = generate_legal_moves(pos, moves);
-	bool maxi = (depth % 2 == 0);
-	result.score = (maxi == true) ? INT_MIN : INT_MAX;
+    struct search_result best_result = {0};
+    memset(history, 0, sizeof(history));
 
-	for (size_t i = 0; i < count; i++)
-	{
-		struct position copy = *pos;
-		int score;
-		int	piece = pos->board[moves[i].from_square];
-		/* do a move, the current player in `copy` is then the opponent, */
-		/* and so when we call minimax we get the score of the opponent. */
-		do_move(&copy, moves[i]);
-		uint64_t new_hash = update_z_table(hash, moves[i].from_square, moves[i].to_square, piece); 
-		/* minimax is called recursively. this call returns the score of */
-		/* the opponent, so we must negate it to get our score.          */
-		score = minimax(&copy, depth - 1, alpha, beta).score;
-		/* update the best move if we found a better one.                */
-		if (maxi)
-		{
-			if (score > result.score)
-			{
-				result.score = score;
-				result.move = moves[i];
-			}
-			alpha = (score > alpha) ? score : alpha;
-		}
-		else
-		{
-			if (score < result.score)
-			{
-				result.score = score;
-				result.move = moves[i];
-			}
-			beta = (score < beta) ? score : beta;
-		}
-		if (alpha >= beta)
-			break ;
-	}
-	store_results(hash, result.score, depth, result.move);
-	return result;
-}
+    const int max_depth = 5;
+    const int thinking_time = 1;
+    time_t start_time = time(NULL);
 
-struct move search(const struct search_info *info)
-{
-	return minimax(info->pos, 6, INT_MIN, INT_MAX).move;
+    for (int depth = 1; depth <= max_depth; depth++) {
+        struct search_result result = minimax(info->pos, depth, -1000000, 1000000);
+        best_result = result;
+
+        time_t current_time = time(NULL);
+        int elapsed = (int)(current_time - start_time);
+
+        char move_str[6];
+        move_str[0] = 'a' + FILE(result.move.from_square);
+        move_str[1] = '1' + RANK(result.move.from_square);
+        move_str[2] = 'a' + FILE(result.move.to_square);
+        move_str[3] = '1' + RANK(result.move.to_square);
+        move_str[4] = (result.move.promotion_type != NO_TYPE) ?
+                      "nbrq"[result.move.promotion_type - 1] : '\0';
+        move_str[5] = '\0';
+
+        printf("info depth %d score cp %d time %d pv %s\n",
+               depth, result.score, elapsed, move_str);
+
+        if ((depth >= 3 && elapsed >= thinking_time) ||
+            elapsed >= thinking_time * 2) {
+            break;
+        }
+    }
+
+    ply++;
+    return best_result.move;
 }
