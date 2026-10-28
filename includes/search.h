@@ -1,10 +1,16 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
+#include <stdbool.h>
+
 #include "position.h"
 #include "move.h"
 #include "uci.h"
 #define	TABLE_MAX	1000000
+#define INFINITY_SCORE 50000  // Reduced from 1000000
+#define MATE_SCORE    49000   // Reduced from 900000
+#define MAX_PLY 64
+#define ASPIRATION_WINDOW 50  // Window size for aspiration search
 
 
 /* information passed to the search function.                                */
@@ -17,12 +23,15 @@ struct search_info {
 
 	/* increment in milliseconds for both players.                           */
 	int increment[2];
+	int depth;
+	struct opening_book *book;
+	int ply;
 };
 
 /* the return type of `minimax`                                              */
 struct search_result {
 	/* the best move found for the position passed to `minimax`.             */
-	struct move move;
+	struct move best_move;
 
 	/* the score of the position passed to `minimax`.                        */
 	int score;
@@ -38,6 +47,21 @@ typedef struct s_table
 }	t_table;
 
 
+#pragma pack(push, 1)
+struct book_entry {
+	uint64_t hash;      // Position hash
+	uint16_t from_square; // From square (0-63)
+	uint16_t to_square;   // To square (0-63)
+	uint32_t count;       // Number of times this move appeared
+	uint8_t side;
+};
+#pragma pack(pop)
+
+struct opening_book {
+	struct book_entry *entries;
+	size_t num_entries;
+	int max_ply;  // Maximum number of moves (10 in your case)
+};
 
 /* in essence, `minimax` is just another evaluation function. it looks some  */
 /* number of moves into the future and returns the value of the best         */
@@ -122,7 +146,6 @@ typedef struct s_table
 /* https://www.chessprogramming.org/Transposition_Table                      */
 /* https://www.chessprogramming.org/Quiescence_Search                        */
 struct search_result minimax(const struct position *pos, int depth, int alpha, int beta);
-
 /* the search function sets up the search parameters and calls `minimax` to  */
 /* starts searching. our basic implementation always starts a search at a    */
 /* fixed depth of 4.                                                         */
@@ -156,6 +179,13 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 /* https://www.chessprogramming.org/Time_Management                          */
 /* https://www.chessprogramming.org/Iterative_Deepening                      */
 /* https://www.chessprogramming.org/Opening_Book                             */
-struct move search(const struct search_info *info);
+struct opening_book* load_opening_book(const char *filename);
+struct move get_book_move(const struct position *pos, const struct opening_book *book, int current_ply);
+struct move search(struct search_info *info);
+__uint64_t	get_hash(const struct position *pos);
+__uint64_t update_z_table(__uint64_t hash, int from, int to, int piece);
+void	store_results(__uint64_t hash, int score, int depth, struct move best_move);
+bool	get_results(__uint64_t hash, int *prev_score, int depth, struct move *prev_move);
+
 
 #endif
